@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres-node:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_NODE_USER:-node_user}
+      POSTGRES_PASSWORD: ${POSTGRES_NODE_PASSWORD:-node_pass}
+      POSTGRES_DB: ${POSTGRES_NODE_DB:-booking_ledger}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_node_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_NODE_USER:-node_user} -d ${POSTGRES_NODE_DB:-booking_ledger}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-django:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_DJANGO_USER:-django_user}
+      POSTGRES_PASSWORD: ${POSTGRES_DJANGO_PASSWORD:-django_pass}
+      POSTGRES_DB: ${POSTGRES_DJANGO_DB:-audit_db}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_django_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_DJANGO_USER:-django_user} -d ${POSTGRES_DJANGO_DB:-audit_db}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+
+volumes:
+  pg_node_data:
+  pg_django_data:
+  mongo_data:
