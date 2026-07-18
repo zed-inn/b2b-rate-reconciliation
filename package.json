@@ -5,5 +5,8 @@
   "workspaces": [
     "packages/*",
     "services/*"
-  ]
+  ],
+  "allowScripts": {
+    "esbuild": true
+  }
 }
