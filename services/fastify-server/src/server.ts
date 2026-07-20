@@ -1,7 +1,8 @@
 import Fastify from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 import { connectMongo } from "@/db/mongo/connection";
-import { connectRabbitMQ } from "@/rmq/publisher";
+import { connectRabbitMQ } from "@/rmq/connection";
+import { startSchedulerConsumer } from "@/rmq/consumers/scheduler";
 import { initBullMQ } from "@/bullmq/queue";
 import { env } from "@/config/env";
 import bookingRoutes from "@/routes/bookings";
@@ -27,6 +28,7 @@ async function start() {
   try {
     await connectMongo();
     await connectRabbitMQ();
+    await startSchedulerConsumer();
     await initBullMQ();
 
     // fastify with strictly validated env config

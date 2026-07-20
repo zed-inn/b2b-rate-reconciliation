@@ -11,6 +11,7 @@ const EnvSchema = z.object({
   MONGO_URI: z.string().min(1, "Mongo connection string is required"),
   RABBITMQ_URL: z.string().min(1, "RabbitMQ connection string is required").default("amqp://rabbitmq:5672"),
   REDIS_URL: z.string().min(1, "Redis connection string is required").default("redis://redis:6379"),
+  DEMO_MODE: z.coerce.boolean().default(false),
 });
 
 const _env = EnvSchema.safeParse(process.env);
