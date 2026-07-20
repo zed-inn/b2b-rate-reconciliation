@@ -9,6 +9,7 @@ const EnvSchema = z.object({
   NODE_ENV: z.enum(["dev", "prod"]).default("dev"),
   DATABASE_URL: z.string().min(1, "Postgres connection string is required"),
   MONGO_URI: z.string().min(1, "Mongo connection string is required"),
+  RABBITMQ_URL: z.string().min(1, "RabbitMQ connection string is required").default("amqp://rabbitmq:5672"),
 });
 
 const _env = EnvSchema.safeParse(process.env);
