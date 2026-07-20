@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import { connectMongo } from "@/db/mongo/connection";
 import { connectRabbitMQ } from "@/rmq/publisher";
+import { initBullMQ } from "@/bullmq/queue";
 import { env } from "@/config/env";
 
 const server = Fastify({
@@ -15,6 +16,7 @@ async function start() {
   try {
     await connectMongo();
     await connectRabbitMQ();
+    await initBullMQ();
 
     // fastify with strictly validated env config
     await server.listen({ port: env.PORT, host: env.HOST });
