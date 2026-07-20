@@ -1,0 +1,17 @@
+{
+  "name": "mock-supplier-api",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "tsx watch src/server.ts"
+  },
+  "dependencies": {
+    "fastify": "^5.10.0",
+    "zod": "^4.4.3",
+    "@auditsys/shared": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}
