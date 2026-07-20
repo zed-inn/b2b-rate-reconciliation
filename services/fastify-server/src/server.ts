@@ -4,6 +4,7 @@ import { connectMongo } from "@/db/mongo/connection";
 import { connectRabbitMQ } from "@/rmq/connection";
 import { startSchedulerConsumer } from "@/rmq/consumers/scheduler";
 import { initBullMQ } from "@/bullmq/queue";
+import { startSnapshotWorker } from "@/bullmq/workers/snapshot";
 import { env } from "@/config/env";
 import bookingRoutes from "@/routes/bookings";
 import invoiceRoutes from "@/routes/invoices";
@@ -30,6 +31,7 @@ async function start() {
     await connectRabbitMQ();
     await startSchedulerConsumer();
     await initBullMQ();
+    startSnapshotWorker();
 
     // fastify with strictly validated env config
     await server.listen({ port: env.PORT, host: env.HOST });
