@@ -1,6 +1,6 @@
 import Fastify from "fastify";
-import { connectMongo } from "./db/mongo/connection";
-import { env } from "./config/env";
+import { connectMongo } from "@/db/mongo/connection";
+import { env } from "@/config/env";
 
 const server = Fastify({
   logger: true,
