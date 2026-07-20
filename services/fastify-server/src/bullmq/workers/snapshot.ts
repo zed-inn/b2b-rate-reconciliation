@@ -37,7 +37,7 @@ async function fetchRates(supplierCode: string, bookingRef: string) {
       baseRate: 17000,
       tax: 1500,
       total: 18500,
-      currency: "USD",
+      currency: "INR",
     };
   }
 }
