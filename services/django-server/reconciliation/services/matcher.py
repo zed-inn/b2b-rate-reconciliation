@@ -19,7 +19,8 @@ def perform_3_way_match(audit: AuditRecord):
                     "quoted": quoted_total,
                     "invoiced": invoiced_total,
                     "difference": final_leakage,
-                    "currency": audit.quoted_currency
+                    "currency": audit.quoted_currency,
+                    "stage": "invoice"
                 }
                 update_supplier_risk(audit.supplier_code, is_failed=True)
                 print(f"[Matcher] FINAL LEAKAGE DETECTED for {audit.booking_ref}! Leakage: {final_leakage}")
@@ -39,6 +40,14 @@ def perform_3_way_match(audit: AuditRecord):
             if original_status != "SNAPSHOT_DISCREPANCY":
                 audit.status = "SNAPSHOT_DISCREPANCY"
                 audit.leakage_amount = snapshot_leakage
+                
+                audit.discrepancy_breakdown = {
+                    "quoted": quoted_total,
+                    "snapshot": snapshot_total,
+                    "difference": snapshot_leakage,
+                    "currency": audit.quoted_currency,
+                    "stage": "snapshot"
+                }
                 print(f"[Matcher] SNAPSHOT DRIFT WARNING for {audit.booking_ref}! Leakage: {snapshot_leakage}")
         else:
             if original_status != "VERIFIED_AT_SNAPSHOT":
