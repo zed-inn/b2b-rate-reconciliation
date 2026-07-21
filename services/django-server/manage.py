@@ -7,6 +7,11 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+    
+    if len(sys.argv) == 2 and sys.argv[1] == 'runserver':
+        from core.env import env
+        sys.argv.append(f"{env.django_host}:{env.django_port}")
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
