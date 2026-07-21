@@ -26,6 +26,7 @@ def start_consumer():
     
     channel.queue_bind(exchange="auditsys.events", queue=queue_name, routing_key="booking.created")
     channel.queue_bind(exchange="auditsys.events", queue=queue_name, routing_key="rate.snapshot.captured")
+    channel.queue_bind(exchange="auditsys.events", queue=queue_name, routing_key="booking.invoiced")
     
     channel.basic_consume(queue=queue_name, on_message_callback=callback)
     
