@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const AmountSchema = z.int().nonnegative();
-const CurrencySchema = z.enum(["USD", "INR"]);
+const CurrencySchema = z.literal("INR");
 
 export const BookingCreatedSchema = z.object({
   event_id: z.uuidv7(),
