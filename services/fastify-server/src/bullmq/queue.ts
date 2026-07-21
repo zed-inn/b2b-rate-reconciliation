@@ -1,7 +1,7 @@
 import { Queue } from "bullmq";
 import { connectRedis, redisConnection } from "./redis/connection";
 
-export const snapshotQueue = new Queue("capture_snapshot", {
+export const snapshotQueue = new Queue("snapshot-queue", {
   connection: redisConnection,
 });
 

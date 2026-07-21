@@ -43,6 +43,7 @@ async function fetchRates(supplierCode: string, bookingRef: string) {
 }
 
 async function processSnapshotJob(job: Job) {
+  console.log(`[BullMQ Worker] Processing snapshot job ${job.id} for booking ${job.data.booking_ref}`);
   const data = TakeSnapshotJobSchema.parse(job.data);
   const { booking_ref, supplier_code } = data;
 
@@ -74,6 +75,7 @@ async function processSnapshotJob(job: Job) {
   });
 
   await publishEvent("rate.snapshot.captured", eventPayload);
+  console.log(`[BullMQ Worker] Snapshot captured and event published for ${booking_ref}`);
 }
 
 export function startSnapshotWorker() {

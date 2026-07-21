@@ -29,8 +29,10 @@ export async function startSchedulerConsumer() {
     if (!msg) return;
 
     try {
+      console.log(`[RMQ Consumer] Received message:`, msg.content.toString());
       const rawPayload = JSON.parse(msg.content.toString());
       const event = BookingCreatedSchema.parse(rawPayload);
+      console.log(`[RMQ Consumer] Parsed event for ${event.booking_ref}`);
 
       const delayMs = calculateDelay(event.check_in_date);
 
