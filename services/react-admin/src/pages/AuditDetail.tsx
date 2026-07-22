@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCcw } from 'lucide-react';
 import { api } from '@/libs/api';
 import { useQuery } from '@tanstack/react-query';
 import type { AuditDetailedResponse } from '@auditsys/shared';
@@ -14,7 +14,7 @@ export default function AuditDetail() {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amountInCents / 100);
   };
 
-  const { data: audit, isPending: isAuditLoading, isError: isAuditError, refetch: refetchAudit } = useQuery({
+  const { data: audit, isPending: isAuditLoading, isError: isAuditError, refetch: refetchAudit, isFetching: isAuditFetching } = useQuery({
     queryKey: ['audit', bookingRef],
     queryFn: async () => {
       const res = await api.get<AuditDetailedResponse>(`/api/audits/${bookingRef}/`);
@@ -24,7 +24,7 @@ export default function AuditDetail() {
     staleTime: 1000 * 30, // 30 seconds
   });
 
-  const { data: snapshotData } = useQuery({
+  const { data: snapshotData, refetch: refetchSnapshot, isFetching: isSnapshotFetching } = useQuery({
     queryKey: ['snapshot', bookingRef],
     queryFn: async () => {
       const res = await api.get(`/api/snapshots/${bookingRef}`);
@@ -32,6 +32,15 @@ export default function AuditDetail() {
     },
     enabled: !!bookingRef && audit?.status === 'SNAPSHOT_DISCREPANCY',
   });
+
+  const handleRefresh = () => {
+    refetchAudit();
+    if (audit?.status === 'SNAPSHOT_DISCREPANCY') {
+      refetchSnapshot();
+    }
+  };
+
+  const isRefreshing = isAuditFetching || isSnapshotFetching;
 
   if (isAuditLoading) return <div className="p-16 flex justify-center"><Loader2 className="h-10 w-10 animate-spin text-muted-foreground" /></div>;
   if (isAuditError) return (
@@ -53,9 +62,19 @@ export default function AuditDetail() {
             <h2 className="text-3xl font-bold tracking-tight">Audit: {audit.booking_ref}</h2>
             <p className="text-muted-foreground mt-1">Supplier: {audit.supplier_code}</p>
           </div>
-          <Badge variant={audit.status.includes('DISCREPANCY') ? 'destructive' : 'default'} className="text-lg px-4 py-1">
-            {audit.status}
-          </Badge>
+          <div className="flex items-center gap-4">
+            <Badge variant={audit.status.includes('DISCREPANCY') ? 'destructive' : 'default'} className="text-lg px-4 py-1">
+              {audit.status}
+            </Badge>
+            <Button 
+              variant="outline" 
+              onClick={handleRefresh} 
+              disabled={isRefreshing}
+            >
+              <RefreshCcw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
       </header>
 
