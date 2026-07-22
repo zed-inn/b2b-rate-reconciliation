@@ -1,48 +1,38 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import { z } from 'zod'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
 
-const EnvSchema = z.object({
-  VITE_HOST: z.string().default('0.0.0.0'),
-  VITE_PORT: z.coerce.number().default(5173),
-  VITE_DJANGO_URL: z.string().url().default('http://localhost:8000'),
-  VITE_FASTIFY_URL: z.string().url().default('http://localhost:3000'),
-})
-
-export default defineConfig(({ mode }) => {
-  const rawEnv = loadEnv(mode, process.cwd(), '')
-  const _env = EnvSchema.safeParse(rawEnv)
-  
-  if (!_env.success) {
-    console.error("Invalid environment variables:\n", z.treeifyError(_env.error))
-    throw new Error("Invalid Vite Environment Configuration")
-  }
-  
-  const env = _env.data
-
-  const proxy: Record<string, any> = {};
-  
-  ['/api/audits', '/api/anomalies'].forEach(route => {
-    proxy[route] = { target: env.VITE_DJANGO_URL, changeOrigin: true }
-  });
-  
-  ['/api/bookings', '/api/invoices'].forEach(route => {
-    proxy[route] = { target: env.VITE_FASTIFY_URL, changeOrigin: true }
-  });
-
-  return {
-    plugins: [react(), tailwindcss()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src')
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@auditsys/shared': path.resolve(__dirname, '../../packages/shared/src')
+    }
+  },
+  server: {
+    proxy: {
+      '/api/audits': {
+        target: process.env.VITE_DJANGO_URL || 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/api/anomalies': {
+        target: process.env.VITE_DJANGO_URL || 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/api/bookings': {
+        target: process.env.VITE_FASTIFY_URL || 'http://127.0.0.1:3000',
+        changeOrigin: true,
+      },
+      '/api/invoices': {
+        target: process.env.VITE_FASTIFY_URL || 'http://127.0.0.1:3000',
+        changeOrigin: true,
+      },
+      '/api/evidence': {
+        target: process.env.VITE_FASTIFY_URL || 'http://127.0.0.1:3000',
+        changeOrigin: true,
       }
-    },
-    server: {
-      host: env.VITE_HOST,
-      port: env.VITE_PORT,
-      proxy
     }
   }
-})
+});

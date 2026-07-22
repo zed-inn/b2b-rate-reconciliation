@@ -1,9 +1,19 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from '@/components/layout/Layout';
+import AuditLedger from '@/pages/AuditLedger';
+import AuditDetail from '@/pages/AuditDetail';
+import SupplierRisk from '@/pages/SupplierRisk';
+
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <h1 className="text-3xl font-bold text-gray-900">
-        Booking Audit Engine
-      </h1>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<AuditLedger />} />
+          <Route path="audits/:bookingRef" element={<AuditDetail />} />
+          <Route path="risk" element={<SupplierRisk />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
