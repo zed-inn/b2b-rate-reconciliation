@@ -1,5 +1,6 @@
 import pika
 from pydantic import ValidationError
+import time
 from core.env import env
 from reconciliation.services.router import route_event
 
@@ -14,9 +15,19 @@ def callback(ch, method, properties, body):
         print(f"[Consumer] Unexpected Error: {e}")
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
-def start_consumer():
+def start_consumer(retries=10, delay=5):
     params = pika.URLParameters(env.rabbitmq_url)
-    connection = pika.BlockingConnection(params)
+    
+    for i in range(retries):
+        try:
+            connection = pika.BlockingConnection(params)
+            break
+        except pika.exceptions.AMQPConnectionError:
+            print(f"RabbitMQ connection failed, retrying in {delay}s... ({i + 1}/{retries})")
+            time.sleep(delay)
+    else:
+        raise Exception("Failed to connect to RabbitMQ after multiple retries")
+        
     channel = connection.channel()
     
     # limit batch size to 50 so we don't blow up ram under heavy load
