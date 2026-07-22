@@ -11,6 +11,9 @@ export default function AppSidebar() {
           <SidebarGroupLabel className="text-lg font-bold tracking-tight text-foreground mb-4 mt-2">
             Audit Engine
           </SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm font-semibold tracking-tight text-muted-foreground uppercase mb-1">
+            Admin Recon
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -21,6 +24,26 @@ export default function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton render={<Link to="/risk" />} isActive={location.pathname === '/risk'}>
                   Supplier Risk
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sm font-semibold tracking-tight text-muted-foreground uppercase mb-1">
+            User Actions
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton render={<Link to="/bookings/new" />} isActive={location.pathname === '/bookings/new'}>
+                  Make Booking
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton render={<Link to="/invoices/upload" />} isActive={location.pathname === '/invoices/upload'}>
+                  Upload Invoices
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

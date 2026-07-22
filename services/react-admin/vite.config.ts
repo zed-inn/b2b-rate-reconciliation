@@ -29,7 +29,7 @@ export default defineConfig({
         target: process.env.VITE_FASTIFY_URL || 'http://127.0.0.1:3000',
         changeOrigin: true,
       },
-      '/api/evidence': {
+      '/api/snapshots': {
         target: process.env.VITE_FASTIFY_URL || 'http://127.0.0.1:3000',
         changeOrigin: true,
       }

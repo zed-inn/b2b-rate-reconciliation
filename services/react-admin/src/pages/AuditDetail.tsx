@@ -14,21 +14,30 @@ export default function AuditDetail() {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amountInCents / 100);
   };
 
-  const { data: audit, isPending, isError, refetch } = useQuery({
+  const { data: audit, isPending: isAuditLoading, isError: isAuditError, refetch: refetchAudit } = useQuery({
     queryKey: ['audit', bookingRef],
     queryFn: async () => {
       const res = await api.get<AuditDetailedResponse>(`/api/audits/${bookingRef}/`);
       return res.data;
     },
-    enabled: !!bookingRef, // Prevents fetching /api/audits/undefined/ if params are missing
+    enabled: !!bookingRef,
     staleTime: 1000 * 30, // 30 seconds
   });
 
-  if (isPending) return <div className="p-16 flex justify-center"><Loader2 className="h-10 w-10 animate-spin text-muted-foreground" /></div>;
-  if (isError) return (
+  const { data: snapshotData } = useQuery({
+    queryKey: ['snapshot', bookingRef],
+    queryFn: async () => {
+      const res = await api.get(`/api/snapshots/${bookingRef}`);
+      return res.data;
+    },
+    enabled: !!bookingRef && audit?.status === 'SNAPSHOT_DISCREPANCY',
+  });
+
+  if (isAuditLoading) return <div className="p-16 flex justify-center"><Loader2 className="h-10 w-10 animate-spin text-muted-foreground" /></div>;
+  if (isAuditError) return (
     <div className="p-16 flex flex-col items-center justify-center gap-4 text-destructive">
       <span className="font-medium text-lg">Failed to load audit details.</span>
-      <Button variant="outline" onClick={() => refetch()} className="border-destructive/30 hover:bg-destructive/20 text-destructive">Retry Connection</Button>
+      <Button variant="outline" onClick={() => refetchAudit()} className="border-destructive/30 hover:bg-destructive/20 text-destructive">Retry Connection</Button>
     </div>
   );
   if (!audit) return <div className="p-8 text-destructive">Audit not found.</div>;
@@ -103,6 +112,28 @@ export default function AuditDetail() {
           </Card>
         )}
       </div>
+
+      {audit?.status === 'SNAPSHOT_DISCREPANCY' && snapshotData && (
+        <Card className="mt-6 md:col-span-2 shadow-sm border">
+          <CardHeader className="bg-muted/30 border-b">
+            <CardTitle>Raw MongoDB Evidence</CardTitle>
+            <div className="text-sm text-muted-foreground">Supplier responses captured at snapshot time</div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            <div className="grid grid-cols-3 gap-4 border-b pb-4">
+              <div><span className="text-sm text-muted-foreground">Captured</span><p className="font-mono">{new Date(snapshotData.capturedAt).toLocaleString()}</p></div>
+              <div><span className="text-sm text-muted-foreground">Base Rate</span><p className="font-mono font-bold">{formatCurrency(snapshotData.normalizedRates.baseRate)}</p></div>
+              <div><span className="text-sm text-muted-foreground">Tax</span><p className="font-mono font-bold">{formatCurrency(snapshotData.normalizedRates.tax)}</p></div>
+            </div>
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Raw Supplier Response</span>
+              <pre className="bg-muted p-4 rounded-md overflow-x-auto text-xs font-mono border">
+                {JSON.stringify(snapshotData.rawSupplierResponse, null, 2)}
+              </pre>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
