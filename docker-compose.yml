@@ -5,15 +5,14 @@ services:
       POSTGRES_USER: ${POSTGRES_NODE_USER:-node_user}
       POSTGRES_PASSWORD: ${POSTGRES_NODE_PASSWORD:-node_pass}
       POSTGRES_DB: ${POSTGRES_NODE_DB:-booking_ledger}
-    ports:
-      - "5432:5432"
     volumes:
       - pg_node_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_NODE_USER:-node_user} -d ${POSTGRES_NODE_DB:-booking_ledger}" ]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 40s
 
   postgres-django:
     image: postgres:16-alpine
@@ -21,15 +20,14 @@ services:
       POSTGRES_USER: ${POSTGRES_DJANGO_USER:-django_user}
       POSTGRES_PASSWORD: ${POSTGRES_DJANGO_PASSWORD:-django_pass}
       POSTGRES_DB: ${POSTGRES_DJANGO_DB:-audit_db}
-    ports:
-      - "5433:5432"
     volumes:
       - pg_django_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_DJANGO_USER:-django_user} -d ${POSTGRES_DJANGO_DB:-audit_db}" ]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 40s
 
   mongodb:
     image: mongo:7

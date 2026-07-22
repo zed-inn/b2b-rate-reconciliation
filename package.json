@@ -6,6 +6,9 @@
     "packages/*",
     "services/*"
   ],
+  "scripts": {
+    "reset:db": "bash scripts/reset_db.sh"
+  },
   "allowScripts": {
     "esbuild": true
   }
