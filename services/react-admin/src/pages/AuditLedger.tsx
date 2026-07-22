@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCcw } from 'lucide-react';
 import { api } from '@/libs/api';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import type { AuditLedgerResponse } from '@auditsys/shared';
@@ -54,12 +54,18 @@ export default function AuditLedger() {
           <h2 className="text-3xl font-bold tracking-tight">Audit Ledger</h2>
           <p className="text-muted-foreground mt-1">Real-time ingestion of booking discrepancy audits.</p>
         </header>
-        <Button
-          variant={showFlagged ? "default" : "outline"}
-          onClick={() => handleFilterToggle(!showFlagged)}
-        >
-          {showFlagged ? "Showing Flagged" : "Show Flagged Only"}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => refetch()} disabled={isPending || isPlaceholderData}>
+            <RefreshCcw className={`h-4 w-4 mr-2 ${isPending || isPlaceholderData ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            variant={showFlagged ? "default" : "outline"}
+            onClick={() => handleFilterToggle(!showFlagged)}
+          >
+            {showFlagged ? "Showing Flagged" : "Show Flagged Only"}
+          </Button>
+        </div>
       </div>
 
       <Card>

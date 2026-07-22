@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCcw } from 'lucide-react';
 import { api } from '@/libs/api';
 import { useQuery } from '@tanstack/react-query';
 import type { SupplierRiskItem } from '@auditsys/shared';
@@ -18,10 +18,16 @@ export default function SupplierRisk() {
 
   return (
     <div className="space-y-6">
-      <header className="mb-8">
-        <h2 className="text-3xl font-bold tracking-tight">Supplier Risk Leaderboard</h2>
-        <p className="text-muted-foreground mt-1">Aggregated historical failure rates by supplier.</p>
-      </header>
+      <div className="flex items-center justify-between mb-8">
+        <header>
+          <h2 className="text-3xl font-bold tracking-tight">Supplier Risk Leaderboard</h2>
+          <p className="text-muted-foreground mt-1">Aggregated historical failure rates by supplier.</p>
+        </header>
+        <Button variant="outline" onClick={() => refetch()} disabled={isPending}>
+          <RefreshCcw className={`h-4 w-4 mr-2 ${isPending ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
 
       <Card>
         {isError && (
