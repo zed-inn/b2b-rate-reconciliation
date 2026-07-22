@@ -9,6 +9,7 @@ import { env } from "@/config/env";
 import bookingRoutes from "@/routes/bookings";
 import invoiceRoutes from "@/routes/invoices";
 import evidenceRoutes from "@/routes/evidence";
+import metricsPlugin from 'fastify-metrics';
 
 const server = Fastify({
   logger: true,
@@ -24,6 +25,10 @@ server.get("/health", async () => {
 server.register(bookingRoutes);
 server.register(invoiceRoutes);
 server.register(evidenceRoutes);
+
+server.register(metricsPlugin, {
+  endpoint: '/metrics'
+});
 
 async function start() {
   try {

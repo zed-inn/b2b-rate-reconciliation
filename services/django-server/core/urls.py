@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/audits/', include('reconciliation.urls')),
     path('api/anomalies/', include('anomalies.urls')),
+    path('prometheus/', include('django_prometheus.urls')),
 ]
