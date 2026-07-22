@@ -52,6 +52,68 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
 
+  api-gateway:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - react-admin
+      - fastify-server
+      - django-web
+
+  react-admin:
+    build:
+      context: .
+      dockerfile: services/react-admin/Dockerfile
+
+  fastify-server:
+    build:
+      context: .
+      dockerfile: services/fastify-server/Dockerfile
+    env_file:
+      - ./services/fastify-server/.env
+    depends_on:
+      postgres-node:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      mongodb:
+        condition: service_started
+
+  mock-supplier-api:
+    build:
+      context: .
+      dockerfile: services/mock-supplier-api/Dockerfile
+
+  django-web:
+    build:
+      context: ./services/django-server
+      dockerfile: Dockerfile
+    env_file:
+      - ./services/django-server/.env
+    depends_on:
+      postgres-django:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+  django-consumer:
+    build:
+      context: ./services/django-server
+      dockerfile: Dockerfile
+    env_file:
+      - ./services/django-server/.env
+    command: [ "uv", "run", "manage.py", "consume_events" ]
+    depends_on:
+      postgres-django:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
 volumes:
   pg_node_data:
   pg_django_data:
