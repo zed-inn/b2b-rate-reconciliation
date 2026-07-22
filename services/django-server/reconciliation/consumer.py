@@ -19,6 +19,9 @@ def start_consumer():
     connection = pika.BlockingConnection(params)
     channel = connection.channel()
     
+    # limit batch size to 50 so we don't blow up ram under heavy load
+    channel.basic_qos(prefetch_count=50)
+    
     channel.exchange_declare(exchange="auditsys.events", exchange_type="topic", durable=True)
     
     result = channel.queue_declare(queue="django.reconciliation.queue", durable=True)
