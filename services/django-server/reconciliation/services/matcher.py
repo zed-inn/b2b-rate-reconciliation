@@ -12,7 +12,7 @@ def perform_3_way_match(audit: AuditRecord):
         
         audit.leakage_amount = final_leakage
         
-        if final_leakage > 0:
+        if final_leakage != 0:
             if original_status != "INVOICE_DISCREPANCY":
                 audit.status = "INVOICE_DISCREPANCY"
                 audit.discrepancy_breakdown = {
@@ -36,10 +36,11 @@ def perform_3_way_match(audit: AuditRecord):
         snapshot_total = audit.snapshot_base + audit.snapshot_tax
         snapshot_leakage = snapshot_total - quoted_total
         
-        if snapshot_leakage > 0:
+        audit.leakage_amount = snapshot_leakage
+        
+        if snapshot_leakage != 0:
             if original_status != "SNAPSHOT_DISCREPANCY":
                 audit.status = "SNAPSHOT_DISCREPANCY"
-                audit.leakage_amount = snapshot_leakage
                 
                 audit.discrepancy_breakdown = {
                     "quoted": quoted_total,
