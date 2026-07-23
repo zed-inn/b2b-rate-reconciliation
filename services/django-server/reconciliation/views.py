@@ -20,7 +20,8 @@ class AuditRecordListView(generics.ListAPIView):
             
         has_leakage = self.request.query_params.get('has_leakage', None)
         if has_leakage == 'true':
-            queryset = queryset.filter(leakage_amount__gt=0)
+            # use exclude(0) instead of __gt=0 to catch negative leakages (undercharges)
+            queryset = queryset.exclude(leakage_amount=0)
             
         return queryset
 
