@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import amqplib, { Channel, ConfirmChannel } from "amqplib";
 import { env } from "@/config/env";
 
@@ -15,10 +16,10 @@ export async function connectRabbitMQ(retries = 10, delay = 5000) {
       channel = await connection.createChannel();
       confirmChannel = await connection.createConfirmChannel();
       await confirmChannel.assertExchange("auditsys.events", "topic", { durable: true });
-      console.log("Connected to RabbitMQ");
+      logger.info("Connected to RabbitMQ");
       return;
     } catch (err) {
-      console.error(`RabbitMQ connection failed, retrying in ${delay}ms... (${i + 1}/${retries})`);
+      logger.error(`RabbitMQ connection failed, retrying in ${delay}ms... (${i + 1}/${retries})`);
       await new Promise((res) => setTimeout(res, delay));
     }
   }

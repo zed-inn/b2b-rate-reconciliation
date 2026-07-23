@@ -1,3 +1,6 @@
+import { logger } from "./utils/logger";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 import Fastify from "fastify";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 import { connectMongo } from "@/db/mongo/connection";
@@ -17,6 +20,13 @@ const server = Fastify({
 
 server.setValidatorCompiler(validatorCompiler);
 server.setSerializerCompiler(serializerCompiler);
+
+server.register(swagger, {
+  openapi: {
+    info: { title: "Reconciliation Ingestion API", version: "1.0.0" },
+  },
+});
+server.register(swaggerUi, { routePrefix: "/docs" });
 
 server.get("/health", async () => {
   return { status: "ok", service: "fastify-server" };
@@ -40,9 +50,9 @@ async function start() {
 
     // fastify with strictly validated env config
     await server.listen({ port: env.PORT, host: env.HOST });
-    console.log(`Fastify Server listening on http://${env.HOST}:${env.PORT}`);
+    logger.info(`Fastify Server listening on http://${env.HOST}:${env.PORT}`);
   } catch (err) {
-    server.log.error(err);
+    logger.error({ err }, "Error starting server");
     process.exit(1);
   }
 }

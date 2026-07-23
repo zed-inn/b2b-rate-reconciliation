@@ -1,4 +1,7 @@
+import logging
 from reconciliation.models import AuditRecord
+
+logger = logging.getLogger(__name__)
 from reconciliation.contracts import RateSnapshotCapturedEvent
 from reconciliation.services.matcher import perform_3_way_match
 
@@ -13,5 +16,5 @@ def process_snapshot_captured(event: RateSnapshotCapturedEvent):
         }
     )
     
-    print(f"[Snapshot Service] Logged snapshot for: {event.booking_ref}")
+    logger.info(f"[Snapshot Service] Logged snapshot for: {event.booking_ref}")
     perform_3_way_match(audit)

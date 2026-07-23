@@ -1,4 +1,7 @@
+import logging
 from reconciliation.models import AuditRecord
+
+logger = logging.getLogger(__name__)
 from reconciliation.contracts import BookingCreatedEvent
 from reconciliation.services.matcher import perform_3_way_match
 
@@ -18,5 +21,5 @@ def process_booking_created(event: BookingCreatedEvent):
         audit.status = "CREATED"
         audit.save()
         
-    print(f"[Booking Service] Logged quote for: {event.booking_ref}")
+    logger.info(f"[Booking Service] Logged quote for: {event.booking_ref}")
     perform_3_way_match(audit)

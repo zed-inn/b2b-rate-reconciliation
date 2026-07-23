@@ -2,6 +2,7 @@ services:
   postgres-node:
     image: postgres:16-alpine
     environment:
+      # override these default passwords in production via .env file
       POSTGRES_USER: ${POSTGRES_NODE_USER:-node_user}
       POSTGRES_PASSWORD: ${POSTGRES_NODE_PASSWORD:-node_pass}
       POSTGRES_DB: ${POSTGRES_NODE_DB:-booking_ledger}
@@ -17,6 +18,7 @@ services:
   postgres-django:
     image: postgres:16-alpine
     environment:
+      # override these default passwords in production via .env file
       POSTGRES_USER: ${POSTGRES_DJANGO_USER:-django_user}
       POSTGRES_PASSWORD: ${POSTGRES_DJANGO_PASSWORD:-django_pass}
       POSTGRES_DB: ${POSTGRES_DJANGO_DB:-audit_db}
@@ -102,6 +104,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./services/django-server/.env
+    environment:
+      - DJANGO_DEBUG=False
     depends_on:
       postgres-django:
         condition: service_healthy
@@ -114,6 +118,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./services/django-server/.env
+    environment:
+      - DJANGO_DEBUG=False
     command: [ "uv", "run", "manage.py", "consume_events" ]
     depends_on:
       postgres-django:

@@ -12,4 +12,5 @@ dependencies = [
     "pika>=1.4.1",
     "psycopg2-binary>=2.9.12",
     "pydantic-settings>=2.14.2",
+    "python-json-logger>=4.1.0",
 ]

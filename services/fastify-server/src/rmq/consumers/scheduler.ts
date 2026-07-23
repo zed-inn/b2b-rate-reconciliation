@@ -1,5 +1,6 @@
 import { channel } from "@/rmq/connection";
 import { env } from "@/config/env";
+import { logger } from "@/utils/logger";
 import { BookingCreatedSchema } from "@auditsys/shared/src/schemas/events";
 import { TakeSnapshotJobSchema } from "@auditsys/shared/src/schemas/jobs";
 import { snapshotQueue } from "@/bullmq/queue";
@@ -23,16 +24,16 @@ export async function startSchedulerConsumer() {
 
   // bind queue for booking creation events
   await channel.bindQueue(q.queue, "auditsys.events", "booking.created");
-  console.log("Scheduler Consumer listening on fastify.scheduler.queue");
+  logger.info("Scheduler Consumer listening on fastify.scheduler.queue");
 
   channel.consume(q.queue, async (msg) => {
     if (!msg) return;
 
     try {
-      console.log(`[RMQ Consumer] Received message:`, msg.content.toString());
+      logger.info(`[RMQ Consumer] Received message: ${msg.content.toString()}`);
       const rawPayload = JSON.parse(msg.content.toString());
       const event = BookingCreatedSchema.parse(rawPayload);
-      console.log(`[RMQ Consumer] Parsed event for ${event.booking_ref}`);
+      logger.info(`[RMQ Consumer] Parsed event for ${event.booking_ref}`);
 
       const delayMs = calculateDelay(event.check_in_date);
 
@@ -46,10 +47,10 @@ export async function startSchedulerConsumer() {
         jobId: `snapshot-${event.booking_ref}`, // idempotency key
       });
 
-      console.log(`[RMQ Consumer] Scheduled snapshot for ${event.booking_ref} in ${delayMs}ms`);
+      logger.info(`[RMQ Consumer] Scheduled snapshot for ${event.booking_ref} in ${delayMs}ms`);
       channel!.ack(msg);
     } catch (err) {
-      console.error("[RMQ Consumer] Error processing message:", err);
+      logger.error({ err }, "[RMQ Consumer] Error processing message");
       channel!.nack(msg, false, false); // nack and drop to avoid infinite retry loops
     }
   });

@@ -1,5 +1,6 @@
 import { Worker, Job } from "bullmq";
 import { redisConnection } from "@/bullmq/redis/connection";
+import { logger } from "@/utils/logger";
 import { TakeSnapshotJobSchema } from "@auditsys/shared/src/schemas/jobs";
 import { RateSnapshotCapturedSchema } from "@auditsys/shared/src/schemas/events";
 import { RateSnapshot } from "@/db/mongo/models/RateSnapshot";
@@ -43,7 +44,7 @@ async function fetchRates(supplierCode: string, bookingRef: string) {
 }
 
 async function processSnapshotJob(job: Job) {
-  console.log(`[BullMQ Worker] Processing snapshot job ${job.id} for booking ${job.data.booking_ref}`);
+  logger.info(`[BullMQ Worker] Processing snapshot job ${job.id} for booking ${job.data.booking_ref}`);
   const data = TakeSnapshotJobSchema.parse(job.data);
   const { booking_ref, supplier_code } = data;
 
@@ -75,7 +76,7 @@ async function processSnapshotJob(job: Job) {
   });
 
   await publishEvent("rate.snapshot.captured", eventPayload);
-  console.log(`[BullMQ Worker] Snapshot captured and event published for ${booking_ref}`);
+  logger.info(`[BullMQ Worker] Snapshot captured and event published for ${booking_ref}`);
 }
 
 export function startSnapshotWorker() {
@@ -85,8 +86,8 @@ export function startSnapshotWorker() {
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`snapshot job ${job?.id} failed:`, err);
+    logger.error({ err }, `snapshot job ${job?.id} failed`);
   });
 
-  console.log("bullmq worker listening on snapshot-queue");
+  logger.info("bullmq worker listening on snapshot-queue");
 }

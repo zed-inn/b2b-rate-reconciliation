@@ -1,4 +1,7 @@
+import logging
 from reconciliation.models import AuditRecord
+
+logger = logging.getLogger(__name__)
 from anomalies.services.risk import update_supplier_risk
 
 def perform_3_way_match(audit: AuditRecord):
@@ -23,12 +26,12 @@ def perform_3_way_match(audit: AuditRecord):
                     "stage": "invoice"
                 }
                 update_supplier_risk(audit.supplier_code, is_failed=True)
-                print(f"[Matcher] FINAL LEAKAGE DETECTED for {audit.booking_ref}! Leakage: {final_leakage}")
+                logger.info(f"[Matcher] FINAL LEAKAGE DETECTED for {audit.booking_ref}! Leakage: {final_leakage}")
         else:
             if original_status != "RECONCILED":
                 audit.status = "RECONCILED"
                 update_supplier_risk(audit.supplier_code, is_failed=False)
-                print(f"[Matcher] Successfully reconciled final invoice for {audit.booking_ref}")
+                logger.info(f"[Matcher] Successfully reconciled final invoice for {audit.booking_ref}")
                 
     # snapshot checking, only if invoice isn't already present
     elif audit.quoted_base is not None and audit.snapshot_base is not None:
@@ -49,10 +52,10 @@ def perform_3_way_match(audit: AuditRecord):
                     "currency": audit.quoted_currency,
                     "stage": "snapshot"
                 }
-                print(f"[Matcher] SNAPSHOT DRIFT WARNING for {audit.booking_ref}! Leakage: {snapshot_leakage}")
+                logger.info(f"[Matcher] SNAPSHOT DRIFT WARNING for {audit.booking_ref}! Leakage: {snapshot_leakage}")
         else:
             if original_status != "VERIFIED_AT_SNAPSHOT":
                 audit.status = "VERIFIED_AT_SNAPSHOT"
-                print(f"[Matcher] Snapshot rates verified for {audit.booking_ref}")
+                logger.info(f"[Matcher] Snapshot rates verified for {audit.booking_ref}")
             
     audit.save()
