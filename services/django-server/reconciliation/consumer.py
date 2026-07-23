@@ -40,8 +40,18 @@ def start_consumer(retries=10, delay=5):
     channel.basic_qos(prefetch_count=50)
     
     channel.exchange_declare(exchange="auditsys.events", exchange_type="topic", durable=True)
+    channel.exchange_declare(exchange="auditsys.dlx", exchange_type="direct", durable=True)
+    channel.queue_declare(queue="dead_letter_queue", durable=True)
+    channel.queue_bind(exchange="auditsys.dlx", queue="dead_letter_queue", routing_key="dlq")
     
-    result = channel.queue_declare(queue="django.reconciliation.queue", durable=True)
+    result = channel.queue_declare(
+        queue="django.reconciliation.queue", 
+        durable=True,
+        arguments={
+            'x-dead-letter-exchange': 'auditsys.dlx',
+            'x-dead-letter-routing-key': 'dlq'
+        }
+    )
     queue_name = result.method.queue
     
     channel.queue_bind(exchange="auditsys.events", queue=queue_name, routing_key="booking.created")

@@ -21,8 +21,14 @@ export function calculateDelay(checkInDate: Date, demoMode: boolean = env.DEMO_M
 export async function startSchedulerConsumer() {
   if (!channel) throw new Error("RabbitMQ channel not initialized");
 
-  // persistent queue for fastify workers
-  const q = await channel.assertQueue("fastify.scheduler.queue", { durable: true });
+  // persistent queue for fastify workers with DLX routing
+  const q = await channel.assertQueue("fastify.scheduler.queue", { 
+    durable: true,
+    arguments: {
+      'x-dead-letter-exchange': 'auditsys.dlx',
+      'x-dead-letter-routing-key': 'dlq'
+    }
+  });
 
   // bind queue for booking creation events
   await channel.bindQueue(q.queue, "auditsys.events", "booking.created");

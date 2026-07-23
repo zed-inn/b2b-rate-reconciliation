@@ -16,6 +16,9 @@ export async function connectRabbitMQ(retries = 10, delay = 5000) {
       channel = await connection.createChannel();
       confirmChannel = await connection.createConfirmChannel();
       await confirmChannel.assertExchange("auditsys.events", "topic", { durable: true });
+      await confirmChannel.assertExchange("auditsys.dlx", "direct", { durable: true });
+      await confirmChannel.assertQueue("dead_letter_queue", { durable: true });
+      await confirmChannel.bindQueue("dead_letter_queue", "auditsys.dlx", "dlq");
       logger.info("Connected to RabbitMQ");
       return;
     } catch (err) {
