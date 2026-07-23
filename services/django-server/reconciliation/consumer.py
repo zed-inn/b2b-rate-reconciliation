@@ -1,9 +1,12 @@
 import pika
 from pydantic import ValidationError
 import time
+import signal
+import sys
 from core.env import env
 import logging
 from reconciliation.services.router import route_event
+from django.db import connections
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +48,41 @@ def start_consumer(retries=10, delay=5):
     channel.queue_bind(exchange="auditsys.events", queue=queue_name, routing_key="rate.snapshot.captured")
     channel.queue_bind(exchange="auditsys.events", queue=queue_name, routing_key="booking.invoiced")
     
+    def graceful_shutdown(sig, frame):
+        logger.info("Received shutdown signal. Requesting graceful stop...")
+        # ignore subsequent signals to prevent nested shutdown loops
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        
+        try:
+            if connection.is_open and channel.is_open:
+                # use threadsafe callback to wake up the select() loop instantly
+                connection.add_callback_threadsafe(channel.stop_consuming)
+        except Exception as e:
+            logger.error(f"Error during shutdown hook: {e}")
+
+    signal.signal(signal.SIGINT, graceful_shutdown)
+    signal.signal(signal.SIGTERM, graceful_shutdown)
+    
     channel.basic_consume(queue=queue_name, on_message_callback=callback)
     
     logger.info("Django Consumer listening on django.reconciliation.queue")
-    channel.start_consuming()
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        pass
+
+    logger.info("Closing active connections...")
+    
+    try:
+        if connection.is_open:
+            connection.close()
+    except Exception as e:
+        logger.error(f"Error closing RMQ connection: {e}")
+        
+    try:
+        connections.close_all()
+    except Exception as e:
+        logger.error(f"Error closing DB connections: {e}")
+        
+    sys.exit(0)

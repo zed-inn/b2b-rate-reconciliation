@@ -26,3 +26,14 @@ export async function connectRabbitMQ(retries = 10, delay = 5000) {
   throw new Error("Failed to connect to RabbitMQ after multiple retries");
 }
 
+export async function closeRabbitMQ() {
+  try {
+    if (connection) {
+      await connection.close();
+      logger.info("RabbitMQ connection closed.");
+    }
+  } catch (err) {
+    logger.error({ err }, "Error closing RabbitMQ connection");
+  }
+}
+

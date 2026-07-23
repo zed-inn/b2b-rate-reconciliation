@@ -9,6 +9,8 @@ import { SupplierRateResponseSchema } from "@auditsys/shared/src/schemas/supplie
 import { publishEvent } from "@/rmq/publisher";
 import { v7 as uuidv7 } from "uuid";
 
+let worker: Worker | null = null;
+
 async function fetchRates(supplierCode: string, bookingRef: string) {
   const config = SUPPLIER_CONFIG[supplierCode];
   if (!config) throw new Error(`unknown supplier code: ${supplierCode}`);
@@ -16,15 +18,15 @@ async function fetchRates(supplierCode: string, bookingRef: string) {
   try {
     const res = await fetch(`${config.baseUrl}/api/rates/${bookingRef}`);
     if (!res.ok) throw new Error(`supplier api http error: ${res.status}`);
-    
+
     const rawResponse = await res.json();
     const parsed = SupplierRateResponseSchema.parse(rawResponse);
     const rateNode = parsed.rooms[0].rates[0];
-    
+
     // convert string float to integer cents for safety
     const baseRate = Math.round(parseFloat(rateNode.net) * 100);
     const tax = Math.round(parseFloat(rateNode.taxes.taxes[0].amount) * 100);
-    
+
     return {
       rawResponse,
       baseRate,
@@ -80,9 +82,9 @@ async function processSnapshotJob(job: Job) {
 }
 
 export function startSnapshotWorker() {
-  const worker = new Worker("snapshot-queue", processSnapshotJob, { 
+  worker = new Worker("snapshot-queue", processSnapshotJob, {
     connection: redisConnection,
-    concurrency: 5 
+    concurrency: 5
   });
 
   worker.on("failed", (job, err) => {
@@ -90,4 +92,11 @@ export function startSnapshotWorker() {
   });
 
   logger.info("bullmq worker listening on snapshot-queue");
+}
+
+export async function closeSnapshotWorker() {
+  if (worker) {
+    logger.info("Closing BullMQ snapshot worker...");
+    await worker.close();
+  }
 }

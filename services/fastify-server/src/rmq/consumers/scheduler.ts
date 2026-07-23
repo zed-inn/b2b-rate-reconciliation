@@ -7,6 +7,8 @@ import { snapshotQueue } from "@/bullmq/queue";
 
 const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
 
+let consumerTag: string | null = null;
+
 export function calculateDelay(checkInDate: Date, demoMode: boolean = env.DEMO_MODE): number {
   if (demoMode) {
     return 10000; // 10 seconds in demo mode
@@ -26,7 +28,7 @@ export async function startSchedulerConsumer() {
   await channel.bindQueue(q.queue, "auditsys.events", "booking.created");
   logger.info("Scheduler Consumer listening on fastify.scheduler.queue");
 
-  channel.consume(q.queue, async (msg) => {
+  const res = await channel.consume(q.queue, async (msg) => {
     if (!msg) return;
 
     try {
@@ -54,4 +56,13 @@ export async function startSchedulerConsumer() {
       channel!.nack(msg, false, false); // nack and drop to avoid infinite retry loops
     }
   });
+
+  consumerTag = res.consumerTag;
+}
+
+export async function stopSchedulerConsumer() {
+  if (channel && consumerTag) {
+    logger.info("Cancelling Scheduler Consumer ingress...");
+    await channel.cancel(consumerTag);
+  }
 }

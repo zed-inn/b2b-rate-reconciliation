@@ -10,3 +10,8 @@ export async function connectRedis() {
   await redisConnection.ping();
   logger.info("Redis connected");
 }
+
+export async function disconnectRedis() {
+  await redisConnection.quit();
+  logger.info("Redis disconnected.");
+}
