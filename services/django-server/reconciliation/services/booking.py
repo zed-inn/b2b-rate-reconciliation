@@ -1,10 +1,12 @@
 import logging
+from django.db import transaction
 from reconciliation.models import AuditRecord
 
 logger = logging.getLogger(__name__)
 from reconciliation.contracts import BookingCreatedEvent
 from reconciliation.services.matcher import perform_3_way_match
 
+@transaction.atomic
 def process_booking_created(event: BookingCreatedEvent):
     audit, created = AuditRecord.objects.update_or_create(
         booking_ref=event.booking_ref,
@@ -17,6 +19,9 @@ def process_booking_created(event: BookingCreatedEvent):
             "check_out_date": event.check_out_date,
         }
     )
+    
+    audit = AuditRecord.objects.select_for_update().get(id=audit.id)
+    
     if created or audit.status == "PENDING":
         audit.status = "CREATED"
         audit.save()
