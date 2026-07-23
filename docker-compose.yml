@@ -121,6 +121,8 @@ services:
     environment:
       - DJANGO_DEBUG=False
     command: [ "uv", "run", "manage.py", "consume_events" ]
+    deploy:
+      replicas: 5
     depends_on:
       postgres-django:
         condition: service_healthy
