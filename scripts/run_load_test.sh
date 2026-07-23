@@ -208,3 +208,12 @@ echo ""
 echo "Prometheus:"
 find "$RESULTS_DIR" -name "prom_*.json" -size +0 -printf "  ✓ %f\n"
 find "$RESULTS_DIR" -name "prom_*.json" -empty -printf "  ✗ %f (EMPTY)\n"
+
+# Run the automatic markdown generation
+bash "$PROJ_DIR/scripts/generate_metrics_md.sh"
+
+echo ""
+echo "======================================================"
+echo " The Markdown metric summary has been generated at:"
+echo " -> $RESULTS_DIR/load_test_metrics.md"
+echo "======================================================"
