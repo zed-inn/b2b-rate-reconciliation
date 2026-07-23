@@ -1,6 +1,21 @@
 # Polyglot Supplier Rate Reconciliation & Booking Audit Engine
 
+![Node.js](https://img.shields.io/badge/Node.js-Fastify-339933?style=flat-square&logo=node.js)
+![Python](https://img.shields.io/badge/Python-Django-3776AB?style=flat-square&logo=python)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Event_Driven-FF6600?style=flat-square&logo=rabbitmq)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-ACID-4169E1?style=flat-square&logo=postgresql)
+
 A real-time, event-driven system designed to detect and flag rate discrepancies in B2B travel bookings. Built as a polyglot microservice architecture (Node.js + Python/Django), this project is modeled directly after the operational challenges and strict data consistency requirements of modern travel aggregation platforms.
+
+---
+
+## Key Features
+
+- **High-Throughput Ingestion**: Non-blocking Node.js/Fastify gateway capable of handling massive event spikes.
+- **Strict Data Integrity**: Row-level locking in PostgreSQL guarantees 100% ACID compliance across concurrent Python consumers.
+- **Idempotent Scheduling**: BullMQ and Redis ensure reliable, deduplicated delayed job execution for supplier API fetching.
+- **Graceful Degradation**: HTTP 207 Multi-Status pattern mitigates the dual-write problem between database commits and event broker publishes.
+- **Comprehensive Observability**: Pre-configured Prometheus and Grafana stack for deep telemetry.
 
 ---
 
@@ -59,16 +74,16 @@ The system runs as 13 containerized services orchestrated by Docker Compose. Eac
          │ - API Gateway    │                     │ - Audit REST API │
          │ - Event Producer │                     │ - Background     │
          │ - BullMQ Worker  │                     │   RMQ Consumer   │
-         └──┬──┬──┬──┬──────┘                     └──┬──────────┬────┘
-            │  │  │  │                               │          │
-            │  │  │  └─── MongoDB ◄─── raw JSON ─────┘          │
-            │  │  └────── Redis ◄───── delayed jobs             │
-            │  │                                                │
-            │  └──────────► RabbitMQ ◄──────────────────────────┘
-            │               (events)
-            ▼                                               ▼
-      PostgreSQL (Node)                       PostgreSQL (Django)
-      (Booking Ledger)                        (Reconciliation State)
+         └──┬──┬──┬──┬──────┘                     └──┬──┬───────┬────┘
+            │  │  │  │                               │  │       │
+            │  │  │  └─── MongoDB ◄─── raw JSON ─────┘  │       │
+            │  │  └────── Redis ◄───── delayed jobs     │       │
+            │  │                                        │       │
+            │  └──────────► RabbitMQ ◄──────────────────┘       │
+            │               (events)                            │
+            ▼                                                   ▼
+      PostgreSQL (Node)                                  PostgreSQL (Django)
+      (Booking Ledger)                                  (Reconciliation State)
 ```
 
 ---
@@ -128,7 +143,7 @@ The pipeline is split into three chronological phases, each triggered by externa
 | **Fastify (Node.js)** | Ingestion Gateway | Fastify's radix-tree router and non-blocking I/O make it ideal for a high-throughput, write-heavy ingestion gateway. |
 | **Django (Python)** | Audit Engine | Django's ORM is the industry standard for complex relational business logic, cursor pagination, and analytical JSONB filtering. |
 | **RabbitMQ** | Event Bus | Decouples ingestion from reconciliation. Durable queues and a Dead Letter Exchange (DLX) prevent message loss from crashes or poisoned payloads. |
-| **BullMQ + Redis** | Job Scheduling | Deterministic \`jobId\`-based deduplication prevents duplicate snapshot jobs from being scheduled for the same booking, combined with automated exponential backoff retries for resilient supplier API fetching. |
+| **BullMQ + Redis** | Job Scheduling | Deterministic `jobId`-based deduplication prevents duplicate snapshot jobs from being scheduled for the same booking, combined with automated exponential backoff retries for resilient supplier API fetching. |
 | **Drizzle ORM** | Node SQL Builder | Type-safe, zero-overhead SQL builder. Unlike heavy runtime ORMs, Drizzle compiles to raw SQL, optimizing insert throughput. |
 | **MongoDB** | Evidence Vault | Supplier APIs return variable-schema JSON blobs. MongoDB's document model with TTL indices natively handles arbitrary forensic evidence. |
 | **Zod & Pydantic** | Contract Validation | Shared schemas ensure payloads are strictly validated on both ends of the wire. Malformed events are instantly rejected. |
