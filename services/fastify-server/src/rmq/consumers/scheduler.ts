@@ -6,8 +6,8 @@ import { snapshotQueue } from "@/bullmq/queue";
 
 const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
 
-function calculateDelay(checkInDate: Date): number {
-  if (env.DEMO_MODE) {
+export function calculateDelay(checkInDate: Date, demoMode: boolean = env.DEMO_MODE): number {
+  if (demoMode) {
     return 10000; // 10 seconds in demo mode
   }
   const checkIn = new Date(checkInDate).getTime();
