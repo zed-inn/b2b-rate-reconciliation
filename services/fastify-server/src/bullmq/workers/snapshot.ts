@@ -15,34 +15,24 @@ async function fetchRates(supplierCode: string, bookingRef: string) {
   const config = SUPPLIER_CONFIG[supplierCode];
   if (!config) throw new Error(`unknown supplier code: ${supplierCode}`);
 
-  try {
-    const res = await fetch(`${config.baseUrl}/api/rates/${bookingRef}`);
-    if (!res.ok) throw new Error(`supplier api http error: ${res.status}`);
+  const res = await fetch(`${config.baseUrl}/api/rates/${bookingRef}`);
+  if (!res.ok) throw new Error(`supplier api http error: ${res.status}`);
 
-    const rawResponse = await res.json();
-    const parsed = SupplierRateResponseSchema.parse(rawResponse);
-    const rateNode = parsed.rooms[0].rates[0];
+  const rawResponse = await res.json();
+  const parsed = SupplierRateResponseSchema.parse(rawResponse);
+  const rateNode = parsed.rooms[0].rates[0];
 
-    // convert string float to integer cents for safety
-    const baseRate = Math.round(parseFloat(rateNode.net) * 100);
-    const tax = Math.round(parseFloat(rateNode.taxes.taxes[0].amount) * 100);
+  // convert string float to integer cents for safety
+  const baseRate = Math.round(parseFloat(rateNode.net) * 100);
+  const tax = Math.round(parseFloat(rateNode.taxes.taxes[0].amount) * 100);
 
-    return {
-      rawResponse,
-      baseRate,
-      tax,
-      total: baseRate + tax,
-      currency: rateNode.taxes.taxes[0].currency,
-    };
-  } catch (err) {
-    return {
-      rawResponse: { error: "fetch failed", reason: String(err) },
-      baseRate: 17000,
-      tax: 1500,
-      total: 18500,
-      currency: "INR",
-    };
-  }
+  return {
+    rawResponse,
+    baseRate,
+    tax,
+    total: baseRate + tax,
+    currency: rateNode.taxes.taxes[0].currency,
+  };
 }
 
 async function processSnapshotJob(job: Job) {
