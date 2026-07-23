@@ -1,4 +1,3 @@
-import { logger } from "@/utils/logger";
 import { z } from "zod";
 import dotenv from "dotenv";
 
@@ -18,7 +17,7 @@ const EnvSchema = z.object({
 const _env = EnvSchema.safeParse(process.env);
 
 if (!_env.success) {
-  logger.error("Invalid environment variables:\n", z.treeifyError(_env.error));
+  console.error("Invalid environment variables:\n", z.treeifyError(_env.error));
   process.exit(1);
 }
 
