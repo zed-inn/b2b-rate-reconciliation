@@ -4,6 +4,13 @@ import { logger } from "@/utils/logger";
 
 export const snapshotQueue = new Queue("snapshot-queue", {
   connection: redisConnection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 5000,
+    },
+  },
 });
 
 export async function initBullMQ() {
