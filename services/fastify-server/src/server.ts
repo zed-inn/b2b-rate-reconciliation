@@ -76,6 +76,16 @@ async function start() {
       process.exit(0);
     };
 
+    process.on("uncaughtException", (err) => {
+      logger.error({ err }, "Uncaught Exception");
+      gracefulShutdown("UNCAUGHT_EXCEPTION");
+    });
+
+    process.on("unhandledRejection", (reason, promise) => {
+      logger.error({ reason, promise }, "Unhandled Rejection");
+      gracefulShutdown("UNHANDLED_REJECTION");
+    });
+
     process.on("SIGINT", () => gracefulShutdown("SIGINT"));
     process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
