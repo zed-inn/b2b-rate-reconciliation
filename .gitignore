@@ -303,3 +303,6 @@ __marimo__/
 
 # Specification files
 spec*.md
+
+# load test results
+results/
