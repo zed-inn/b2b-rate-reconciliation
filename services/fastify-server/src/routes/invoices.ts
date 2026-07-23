@@ -6,6 +6,7 @@ import { db } from "@/db/postgres/connection";
 import { bookings } from "@/db/postgres/schema";
 import { and, eq } from "drizzle-orm";
 import { publishEvent } from "@/rmq/publisher";
+import { z } from "zod";
 
 const invoiceRoutes: FastifyPluginAsyncZod = async (server) => {
   server.post(
@@ -13,23 +14,32 @@ const invoiceRoutes: FastifyPluginAsyncZod = async (server) => {
     { schema: { body: UploadInvoiceRequestSchema } },
     async (request, reply) => {
       const invoices = request.body;
+      const eventsToPublish: z.infer<typeof BookingInvoicedSchema>[] = [];
 
+      // Execute atomic DB transaction using Promise.all
+      await db.transaction(async (tx) => {
+        await Promise.all(
+          invoices.map((invoice) =>
+            tx
+              .update(bookings)
+              .set({
+                invoicedBaseRate: invoice.invoiced_base_rate,
+                invoicedTax: invoice.invoiced_tax,
+                invoicedCurrency: invoice.invoiced_currency,
+                status: "INVOICED",
+              })
+              .where(
+                and(
+                  eq(bookings.bookingRef, invoice.booking_ref),
+                  eq(bookings.supplierCode, invoice.supplier_code)
+                )
+              )
+          )
+        );
+      });
+
+      // Parse and Publish events only after DB transaction fully commits
       for (const invoice of invoices) {
-        await db
-          .update(bookings)
-          .set({
-            invoicedBaseRate: invoice.invoiced_base_rate,
-            invoicedTax: invoice.invoiced_tax,
-            invoicedCurrency: invoice.invoiced_currency,
-            status: "INVOICED",
-          })
-          .where(
-            and(
-              eq(bookings.bookingRef, invoice.booking_ref),
-              eq(bookings.supplierCode, invoice.supplier_code)
-            )
-          );
-
         const eventPayload = BookingInvoicedSchema.parse({
           event_id: uuidv7(),
           timestamp: new Date(),
