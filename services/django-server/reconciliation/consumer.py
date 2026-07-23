@@ -7,10 +7,13 @@ from core.env import env
 import logging
 from reconciliation.services.router import route_event
 from django.db import connections
+from django.db import close_old_connections
 
 logger = logging.getLogger(__name__)
 
 def callback(ch, method, properties, body):
+    close_old_connections()
+
     try:
         route_event(method.routing_key, body)
         ch.basic_ack(delivery_tag=method.delivery_tag)
