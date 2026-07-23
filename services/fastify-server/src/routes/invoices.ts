@@ -16,7 +16,7 @@ const invoiceRoutes: FastifyPluginAsyncZod = async (server) => {
       const invoices = request.body;
       const eventsToPublish: z.infer<typeof BookingInvoicedSchema>[] = [];
 
-      // Execute atomic DB transaction using Promise.all
+      // execute atomic DB transaction using Promise.all
       await db.transaction(async (tx) => {
         await Promise.all(
           invoices.map((invoice) =>
@@ -38,18 +38,36 @@ const invoiceRoutes: FastifyPluginAsyncZod = async (server) => {
         );
       });
 
-      // Parse and Publish events only after DB transaction fully commits
+      // parse and Publish events only after DB transaction fully commits
+      let publishedCount = 0;
+      let failedPublishCount = 0;
+
       for (const invoice of invoices) {
-        const eventPayload = BookingInvoicedSchema.parse({
-          event_id: uuidv7(),
-          timestamp: new Date(),
-          booking_ref: invoice.booking_ref,
-          supplier_code: invoice.supplier_code,
-          invoiced_base_rate: invoice.invoiced_base_rate,
-          invoiced_tax: invoice.invoiced_tax,
-          invoiced_currency: invoice.invoiced_currency,
+        try {
+          const eventPayload = BookingInvoicedSchema.parse({
+            event_id: uuidv7(),
+            timestamp: new Date(),
+            booking_ref: invoice.booking_ref,
+            supplier_code: invoice.supplier_code,
+            invoiced_base_rate: invoice.invoiced_base_rate,
+            invoiced_tax: invoice.invoiced_tax,
+            invoiced_currency: invoice.invoiced_currency,
+          });
+          await publishEvent("booking.invoiced", eventPayload);
+          publishedCount++;
+        } catch (err) {
+          request.log.error({ err, booking_ref: invoice.booking_ref }, "Failed to publish invoice event to RMQ");
+          failedPublishCount++;
+        }
+      }
+
+      if (failedPublishCount > 0) {
+        return reply.code(207).send({ 
+          status: "PARTIAL_SUCCESS", 
+          db_updated: invoices.length,
+          events_published: publishedCount,
+          events_failed: failedPublishCount
         });
-        await publishEvent("booking.invoiced", eventPayload);
       }
 
       return reply.code(200).send({ status: "INVOICED_PROCESSED", count: invoices.length });
