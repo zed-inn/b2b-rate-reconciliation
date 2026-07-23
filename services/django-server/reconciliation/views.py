@@ -12,7 +12,7 @@ class AuditRecordListView(generics.ListAPIView):
     pagination_class = AuditCursorPagination
 
     def get_queryset(self):
-        queryset = AuditRecord.objects.all()
+        queryset = AuditRecord.objects.filter(quoted_base__isnull=False)
         
         status_filter = self.request.query_params.get('status', None)
         if status_filter:
@@ -25,6 +25,6 @@ class AuditRecordListView(generics.ListAPIView):
         return queryset
 
 class AuditRecordDetailView(generics.RetrieveAPIView):
-    queryset = AuditRecord.objects.all()
+    queryset = AuditRecord.objects.filter(quoted_base__isnull=False)
     serializer_class = AuditDetailSerializer
     lookup_field = 'booking_ref'

@@ -14,7 +14,7 @@ def process_booking_created(event: BookingCreatedEvent):
             "check_out_date": event.check_out_date,
         }
     )
-    if created:
+    if created or audit.status == "PENDING":
         audit.status = "CREATED"
         audit.save()
         
