@@ -311,6 +311,3 @@ results/
 codebase*.txt
 scrape_*.sh
 scrape_*.js
-
-# metrics markdowns
-*load_test*.md
